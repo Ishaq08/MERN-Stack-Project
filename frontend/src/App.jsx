@@ -18,6 +18,7 @@ import UserManagement from './components/Admin/UserManagement';
 import ProductManagement from './components/Admin/ProductManagement';
 import EditProductPage from './components/Admin/EditProductPage';
 import OrderMangement from './components/Admin/OrderMangement';
+import { HashRouter } from 'react-router-dom';
 
 const App = () => {
   return (
