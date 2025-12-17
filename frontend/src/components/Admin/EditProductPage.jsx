@@ -48,10 +48,33 @@ const EditProductPage = () => {
 
   // Handler for image file upload
   const handleImageUpload = async (e) => {
-    const file = e.target.files[0]; //
-    console.log('File ready for upload:', file);
-    // **TODO:** Implement file upload logic (e.g., call a service to upload file)
-  }; //
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      const response = await fetch('/api/uploads', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Upload successful:', data);
+        // Update productData with the new image URL
+        setProductData((prevData) => ({
+          ...prevData,
+          images: [...prevData.images, { url: data.imageUrl }],
+        }));
+      } else {
+        console.error('Upload failed:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Error uploading file:', error);
+    }
+  };
 
   // Form submission handler
   const handleSubmit = (e) => {
@@ -208,6 +231,7 @@ const EditProductPage = () => {
           <input
             type="file"
             id="imageUpload"
+            name="image"
             onChange={handleImageUpload}
             className=" p-2 border rounded"
           />{' '}
