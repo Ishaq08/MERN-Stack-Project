@@ -32,7 +32,7 @@ const Navbar = () => {
         {/* Left logo */}
         <div>
           <Link to="/" className="text-2xl font-medium">
-            Rabbit
+            Peridot Lines
           </Link>
         </div>
         {/* Center Navagation  links*/}
