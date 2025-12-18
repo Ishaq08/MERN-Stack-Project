@@ -1,20 +1,92 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 // Assuming you are using 'react-router-dom' for the Link component
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import login from "../assets/login.webp"
+import { loginUser } from '../redux/authSlice';
+import {useDispatch, useSelector} from "react-redux"
+import { mergeCart } from '../redux/slices/cartSlice';
 
 
 const Login = () => {
   // State for form inputs
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { user, guestId } = useSelector((state) => state.auth);
+  const { cart } = useSelector((state) => state.cart);
+
+  const redirect = new URLSearchParams(location.search).get('redirect') || '/';
+  const isCheckoutRedirect = redirect.includes('checkout');
+
+  // useEffect(() => {
+
+  //   if (user) {
+  //     if (cart?.products.length > 0 && guestId) {
+  //       dispatch(mergeCart({ guestId, user })).then(() => {
+  //        navigate(isCheckoutRedirect ? "/checkout": "/")
+  //      })
+  //     } else {
+  //       navigate(isCheckoutRedirect ? "/checkout" : "/")
+  //     }
+  //   }
+  // }, [navigate, guestId, cart, isCheckoutRedirect, dispatch]); // Based on the visible "rect, dispatch])" snippet
+
+  // useEffect(() => {
+  //   if (user) {
+  //     const performNavigation = () => {
+  //       navigate(isCheckoutRedirect ? '/checkout' : '/');
+  //     };
+
+  //     // If there are items in a guest cart, merge them first
+  //     if (cart?.products?.length > 0 && guestId) {
+  //       dispatch(mergeCart({ guestId, user })).then(() => {
+  //         performNavigation();
+  //       });
+  //     } else {
+  //       // If no cart items, just go home/checkout
+  //       performNavigation();
+  //     }
+  //   }
+  // }, [user, cart, guestId, navigate, isCheckoutRedirect, dispatch]);
+
+  useEffect(() => {
+    if (user) {
+      const performNavigation = () => {
+        navigate(isCheckoutRedirect ? '/checkout' : '/');
+      };
+
+      // Only merge if there are actual products in the guest cart
+      if (cart?.products?.length > 0 && guestId) {
+        // We pass the guestId. The 'user' info is pulled from the token in the thunk fix above
+        dispatch(mergeCart({ guestId, guestCartItems: cart.products }))
+          .unwrap()
+          .then(() => {
+            performNavigation();
+          })
+          .catch((err) => {
+            console.error('Merge failed:', err);
+            performNavigation(); // Navigate anyway so the user isn't stuck
+          });
+      } else {
+        performNavigation();
+      }
+    }
+  }, [user, guestId, navigate, isCheckoutRedirect, dispatch]);
 
   // Function to handle form submission (you would add API logic here)
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Login submitted with:', { email, password });
-    // Add your API call to authenticate the user here
+    try {
+      // This triggers the network request
+      await dispatch(loginUser({ email, password })).unwrap();
+    } catch (err) {
+      console.error('Failed to login:', err);
+    }
   };
+
+  
 
   return (
     <div className="h-screen flex">
@@ -26,8 +98,8 @@ const Login = () => {
         >
           {/* Header */}
           <div className="flex justify-center mb-6">
-                      <h2 className="text-xl font-medium mb-2">Rabbit</h2>
-                      {/*  */}
+            <h2 className="text-xl font-medium mb-2">Rabbit</h2>
+            {/*  */}
           </div>
           <h2 className="text-2xl font-bold text-center mb-6">Hey there! 👋</h2>
           <p className="text-center text-sm text-gray-600 mb-6">
@@ -70,9 +142,12 @@ const Login = () => {
 
           {/* Register Link */}
           <p className="mt-6 text-center text-sm">
-            Don't have an account?{""}
+            Don't have an account?{''}
             {/* Make sure to import Link from 'react-router-dom' */}
-            <Link to="/register" className="text-blue-500 ml-1 hover:underline">
+            <Link
+              to={`/register?redirect=${encodeURIComponent(redirect)}`}
+              className="text-blue-500 ml-1 hover:underline"
+            >
               Register
             </Link>
           </p>

@@ -1,7 +1,7 @@
 // Load dependencies and files
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
-const {Product} = require('./models/Product'); // Line 3: Requires the Product model
+const Product = require('./models/Product'); // Line 3: Requires the Product model
 const User = require('./models/User'); // Line 4: Requires the User model
 const Cart = require('./models/Cart'); // Line 4: Requires the User model
 const products = require('./data/products'); // Line 5: Requires the sample product data array

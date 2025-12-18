@@ -1,6 +1,6 @@
 const express = require("express"); //.jpg
 const Cart = require("../models/Cart"); //.jpg
-const {Product} = require("../models/Product"); //.jpg
+const Product = require("../models/Product");
 const { protect } = require('../middelware/authMiddleware.js');
 
 
@@ -8,11 +8,11 @@ const router = express.Router(); //.jpg
 
 // --- Helper function to get a cart by User ID or Guest ID ---
 //
-const getCart = async (userID, guestID) => {
-    if (userID) { //
-        return await Cart.findOne({ user: userID }); // Find cart associated with logged-in user
-    } else if (guestID) { //
-        return await Cart.findOne({ guestId: guestID }); // Find cart associated with guest ID
+const getCart = async (userId, guestId) => {
+    if (userId) { //
+        return await Cart.findOne({ user: userId }); // Find cart associated with logged-in user
+    } else if (guestId) { //
+        return await Cart.findOne({ guestId: guestId }); // Find cart associated with guest ID
     }
     return null; // Return null if neither ID is provided
 };
@@ -28,8 +28,8 @@ router.post("/", async (req, res) => { //.jpg
             quantity,
             size,
             color,
-            userID, // ID of a logged-in user
-            guestID, // ID of a guest
+            userId, // ID of a logged-in user
+            guestId, // ID of a guest
         } = req.body; //.jpg
 
         // 1. Verify Product Existence and Fetch Details
@@ -40,7 +40,7 @@ router.post("/", async (req, res) => { //.jpg
 
         // 2. Determine User Status and Fetch Existing Cart
         // Fetch the cart using the helper function
-        let cart = await getCart(userID, guestID); //.jpg)
+        let cart = await getCart(userId, guestId); //.jpg)
 
         // 3. Handle Existing Cart
         if (cart) { //.jpg)
@@ -83,10 +83,10 @@ router.post("/", async (req, res) => { //.jpg
             
             // Create a new cart document
             const newCart = await Cart.create({ //.jpg)
-                // Assign userID if logged in, otherwise undefined
-                user: userID ? userID : undefined, //.jpg)
-                // Assign guestID or generate a new one
-                guestId: guestID ? guestID : `guest_${new Date().getTime()}`, //.jpg)
+                // Assign userId if logged in, otherwise undefined
+                user: userId ? userId : undefined, //.jpg)
+                // Assign guestId or generate a new one
+                guestId: guestId ? guestId : `guest_${new Date().getTime()}`, //.jpg)
                 
                 // Add the first product
                 products: [{ //.jpg)
@@ -123,11 +123,11 @@ router.put("/", async (req, res) => {
     quantity, //
     size, //
     color, //
-    userID, //
-    guestID, //
+    userId, //
+    guestId, //
   } = req.body; //
   try {
-    let cart = await getCart(userID, guestID); //
+    let cart = await getCart(userId, guestId); //
 
     if (!cart) {
       //
@@ -257,12 +257,12 @@ router.post("/merge", protect, async (req, res) => { //
     const { guestId } = req.body; //
     
     // Get the logged-in user ID from the protect middleware
-    const userID = req.user._id;
+    const userId = req.user._id;
 
     try {
         // 1. Find the guest cart and the user cart
         const guestCart = await Cart.findOne({ guestId }); //
-        const userCart = await Cart.findOne({ user: userID }); //
+        const userCart = await Cart.findOne({ user: userId }); //
 
         // --- Handle Guest Cart Validation ---
         
@@ -327,7 +327,7 @@ router.post("/merge", protect, async (req, res) => { //
             // Case 2: User has NO existing cart, so assign the guest cart to the user
             
             // Update the guest cart ownership fields
-            guestCart.user = userID; // Assign the logged-in user ID
+            guestCart.user = userId; // Assign the logged-in user ID
             guestCart.guestId = undefined; // Remove the guest identifier
             
             // Save the now-assigned cart

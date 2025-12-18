@@ -1,5 +1,5 @@
 const express = require('express');
-const { Product } = require('../models/Product.js'); // Assuming this path is correct
+const Product = require('../models/Product.js');
 const { protect, admin } = require('../middelware/authMiddleware.js');
 
 const router = express.Router();
